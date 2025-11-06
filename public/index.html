@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control de Pólizas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+  <header class="bg-blue-700 text-white py-6 shadow">
+    <div class="container mx-auto px-6">
+      <h1 class="text-2xl font-semibold">Control de pólizas y siniestros</h1>
+      <p class="text-blue-100">Gestiona cartas, reclamos y documentación técnica en un solo lugar.</p>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-6 py-8">
+    <div class="flex flex-wrap gap-4 mb-6">
+      <button id="newPolicyBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">Nueva póliza</button>
+      <button id="newClientBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded shadow">Agregar cliente</button>
+      <span class="text-sm text-slate-500">Haz clic en cualquier celda para editar la información.</span>
+    </div>
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+      <table class="min-w-full divide-y divide-slate-200" id="policyTable">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">N° Póliza</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">N° Siniestro</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Fecha</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Dirección</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Atendida</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Carta al broker</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Fecha carta broker</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Cliente</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Reclamo presentado</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Carta enviada</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">N° carta cliente</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Fecha carta cliente</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Informe técnico</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Acta de inspección</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200" id="policyTableBody"></tbody>
+      </table>
+      <div id="emptyState" class="hidden text-center py-12 text-slate-500">
+        Aún no hay registros. Comienza creando una póliza o un cliente.
+      </div>
+    </div>
+  </main>
+
+  <div id="overlay" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-20 px-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full overflow-hidden">
+      <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200">
+        <h2 id="modalTitle" class="text-xl font-semibold text-slate-800"></h2>
+        <button id="closeModal" class="text-slate-500 hover:text-slate-700">&times;</button>
+      </div>
+      <form id="modalForm" class="p-6 space-y-4"></form>
+    </div>
+  </div>
+
+  <template id="policyFormTemplate">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Número de póliza</span>
+        <input type="text" name="policy_number" required class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Número de siniestro</span>
+        <input type="text" name="claim_number" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Fecha</span>
+        <input type="date" name="date" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Dirección</span>
+        <input type="text" name="address" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Carta al broker (número)</span>
+        <input type="text" name="broker_letter_number" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Fecha carta al broker</span>
+        <input type="date" name="broker_letter_date" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="checkbox" name="attended" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+        <span class="text-sm font-medium text-slate-600">Póliza atendida</span>
+      </label>
+    </div>
+    <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+      <button type="button" data-action="cancel" class="px-4 py-2 rounded border border-slate-300 text-slate-600 hover:bg-slate-100">Cancelar</button>
+      <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Guardar</button>
+    </div>
+  </template>
+
+  <template id="clientFormTemplate">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Póliza asociada</span>
+        <input type="number" name="policy_id" required class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Nombre del cliente</span>
+        <input type="text" name="name" required class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="checkbox" name="claim_presented" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+        <span class="text-sm font-medium text-slate-600">Reclamo presentado</span>
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="checkbox" name="letter_sent" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+        <span class="text-sm font-medium text-slate-600">Carta al cliente enviada</span>
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Número de carta al cliente</span>
+        <input type="text" name="client_letter_number" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Fecha carta al cliente</span>
+        <input type="date" name="client_letter_date" class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Informe técnico (PDF)</span>
+        <input type="file" name="technical_report_file" accept="application/pdf" class="mt-1 block w-full text-sm text-slate-600" />
+        <input type="hidden" name="existing_technical_report_path" />
+        <p data-role="technical-report-link" class="mt-1 text-xs text-blue-600 hidden"></p>
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-600">Acta de inspección (PDF)</span>
+        <input type="file" name="inspection_report_file" accept="application/pdf" class="mt-1 block w-full text-sm text-slate-600" />
+        <input type="hidden" name="existing_inspection_report_path" />
+        <p data-role="inspection-report-link" class="mt-1 text-xs text-blue-600 hidden"></p>
+      </label>
+    </div>
+    <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+      <button type="button" data-action="cancel" class="px-4 py-2 rounded border border-slate-300 text-slate-600 hover:bg-slate-100">Cancelar</button>
+      <button type="submit" class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">Guardar</button>
+    </div>
+  </template>
+
+  <script src="/main.js" type="module"></script>
+</body>
+</html>
